@@ -79,4 +79,25 @@ contract Casino {
     function getAccumulated() public view returns (uint256) {
         return address(this).balance;
     }
+
+    function payWinners() public payable onlyAdmin {
+        uint256 totalRatio = 0;
+        uint256 portionToPay = 90;
+
+        for (uint8 i = 0; i < betters.length; i++) {
+            if (betDetails[betters[i]].betNo == _winNo) {
+                totalRatio += betDetails[betters[i]].betAmount;
+            }
+        }
+
+        for (uint8 i = 0; i < betters.length; i++) {
+            address payable addr = payable(betters[i]);
+            (bool sent, bytes memory data) = addr.call{
+                value: ((_accumulatedAmount *
+                    portionToPay *
+                    betDetails[betters[i]].betAmount) / totalRatio) * 100
+            }("");
+            require(sent, "Failed to send Ether");
+        }
+    }
 }
